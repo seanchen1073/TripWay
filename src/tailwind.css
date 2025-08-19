@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@tailwind screens;
+
+
+.active-tab {
+background-color:#dfae0c;
+color: black;
+}
+
+.tab-content {
+  display: none;
+}
+
+input[type="radio"]:checked + label + .tab-content {
+  display: block;
+}
+
+.swal2-html-container {
+  margin: 0 !important;
+}

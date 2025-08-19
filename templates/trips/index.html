@@ -1,0 +1,120 @@
+{% extends 'layouts/base.html' %} 
+{% load static %}
+
+{% block content %}
+  <div class="pt-8">
+
+    <header class="flex items-center justify-between w-full p-4 mx-auto md:w-3/4">
+      <div class="flex items-center w-full mb-2 md:w-auto md:mb-0">
+          <a class="m-1 transition-colors duration-300 hover:text-sky-700" href="{% url 'home' %}">
+              <i class="text-2xl fa-solid fa-house-chimney"></i>
+          </a>
+          <h1 class="p-2 text-2xl font-bold md:text-3xl">行程列表</h1>
+      </div>
+      <div class="relative inline-block w-2/3 border md:w-48 border-slate-300 rounded-2xl">
+          <select id="sort-options" class="block w-full px-3 py-2 text-base text-black duration-300 ease-in-out bg-white appearance-none cursor-pointer md:text-xl border-slate-300 rounded-2xl">
+              <option value="created_desc" {% if sort_option == 'created_desc' %}selected{% endif %} class="bg-white appearance-none hover:bg-slate-200">依建立時間</option>
+              <option value="date_asc" {% if sort_option == 'date_asc' %}selected{% endif %} class="bg-white appearance-none hover:bg-slate-200">出發日(近到遠)</option>
+              <option value="date_desc" {% if sort_option == 'date_desc' %}selected{% endif %} class="bg-white appearance-none hover:bg-slate-200">出發日(遠到近)</option>
+          </select>
+          <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+              <i class="absolute inset-y-0 right-0 flex items-center px-5 py-4 pointer-events-none fa-solid fa-chevron-down"></i>
+          </div>
+      </div>
+    </header>
+
+    {% if trips %}
+      <div class="w-3/4 mx-auto mt-2">
+        <div class="flex flex-wrap justify-start gap-4">
+          {% for trip in trips %}
+            <div class="relative md-full w-full sm:w-[48%] lg:w-[48%] xl:w-[32%] mt-5 mb-1 rounded-xl shadow-md" x-data="{ deleteTrip, share_{{ trip.t.id}}: false, activeTab: 'watch_{{ trip.t.id }}' }" >
+              {% if trip.tm.is_editable %}
+              <div class="absolute right-0 z-10 m-4">
+                <button id="menu-toggle-{{ trip.t.id }}" class="text-base border-0 rounded-full opacity-75 w-9 h-9 bg-slate-600 hover:opacity-100">
+                  <i class="text-white fas fa-ellipsis-h"></i>
+                </button>
+                <div id="menu-{{ trip.t.id }}" class="absolute right-0 hidden w-24 mt-3 bg-white border rounded-lg shadow-md">
+                  <a href="{% url 'trips:update' trip.t.id %}" class="block w-24 px-4 py-2 text-lg font-bold text-center border-b rounded-t-lg hover:bg-slate-300 ">
+                    <i class="mr-2 fa-solid fa-pen-to-square"></i>編輯
+                  </a>
+                  <form @submit.prevent="deleteTrip($refs.trip)" action="{% url 'trips:delete' trip.t.id %}" method="post" x-ref="trip">
+                  {% csrf_token %}
+                    <button type="submit" class="block w-full px-4 py-2 text-lg font-bold text-center rounded-b-lg hover:bg-slate-300">
+                      <i class="mr-2 fa-solid fa-trash-can"></i>刪除
+                    </button>
+                  </form>
+                  <div>
+                    <button class="block w-full px-4 py-2 text-lg font-bold text-center rounded-b-lg hover:bg-slate-300" @click="share_{{ trip.t.id}} = true">
+                      <i class="mr-1 fa-regular fa-share-from-square"></i>分享
+                    </button>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+              <div :class="{ 'hidden': !share_{{ trip.t.id}} }" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+                <div class="relative flex flex-col w-full sm:w-2/3 md:w-1/2 lg:w-1/3 p-4 sm:p-8 m-auto bg-white rounded-lg h-3/4">
+                  <button @click="share_{{ trip.t.id}} = false" class="absolute text-xl right-4 top-4 sm:right-8 sm:top-8">X</button>
+                  <div class="flex justify-center w-4/5 mx-auto ">
+                    <input id="watch_{{ trip.t.id }}" class="hidden peer/watch" type="radio" name="status_{{ trip.t.id }}" checked @click="activeTab = 'watch_{{ trip.t.id }}'" />
+                    <label for="watch_{{ trip.t.id }}" class="w-1/2 mx-1 text-sm sm:text-xl text-white peer-checked/watch:bg-blue-btn bg-neutral-400 rounded-3xl btn">分享行程</label>
+                    <input id="edit_{{ trip.t.id }}" class="hidden peer/edit" type="radio" name="status_{{ trip.t.id }}" @click="activeTab = 'edit_{{ trip.t.id }}'" />
+                    <label for="edit_{{ trip.t.id }}" class="w-1/2 mx-1 text-sm sm:text-xl text-white peer-checked/edit:bg-btn-red bg-neutral-400 rounded-3xl btn">共編行程</label>
+                  </div>
+          
+                  <div class="flex flex-col items-center h-4/5 p-2 sm:p-4 mt-4 sm:mt-8 space-y-2 sm:space-y-4 border border-gray-200 rounded my-auto" x-show="activeTab === 'watch_{{ trip.t.id }}'">
+                    <div class="w-2/3 h-2/3">
+                      <img id="share-id" src="{{ trip.content.watch_qrimg }}" alt="" class="object-contain w-full h-full" >
+                    </div>
+                    <div class="w-full h-1/3 flex flex-col item-center">
+                      <button id="copyWatchButton" class="w-full sm:w-4/5 p-1 sm:p-2 mx-auto text-sm sm:text-xl font-bold text-center text-white border btn bg-blue-btn hover:bg-blue-dc rounded-3xl">複製連結
+                        <span class="hidden">{{ trip.content.watch_url }}</span>
+                      </button>
+                      <div class="h-10 mt-4 flex justify-center">
+                        <p id="successMessage" class="text-green-500 text-sm sm:text-lg hidden">連結已成功複製!</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex flex-col items-center h-4/5 p-2 sm:p-4 mt-4 sm:mt-8 space-y-2 sm:space-y-4 border border-gray-200 rounded my-auto" x-show="activeTab === 'edit_{{ trip.t.id }}'">
+                    <div class="w-2/3 h-2/3">
+                      <img src="{{ trip.content.confirm_qrimg }}" alt="" class="object-contain w-full h-full">
+                    </div>
+                    <div class="w-full h-1/3 flex flex-col item-center">
+                      <button id="copyEditButton" class="w-full sm:w-4/5 p-1 sm:p-2 mx-auto text-sm sm:text-xl font-bold text-center text-white border btn bg-blue-btn hover:bg-blue-dc rounded-3xl">複製連結
+                      <span class="hidden">{{ trip.content.confirm_url }}</span>
+                      </button>
+                      <div class="h-10 mt-4 flex justify-center">
+                        <p id="successMessage2" class="text-green-500 text-sm sm:text-lg hidden">連結已成功複製!</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <a href="{% url 'trips:schedules:index' trip.t.id %}" class="block h-full duration-300 ease-in-out bg-white border-2 cursor-pointer rounded-xl hover:scale-105">
+                <div class="w-full h-[220px] overflow-hidden rounded-t-xl">
+                  <img src="{% if trip.t.image %}{{ trip.t.image.url }}{% else %}{% static 'img/tripdefault.jpeg' %}{% endif %}" class="object-cover w-full h-full" alt="">
+                </div>
+                <div class="p-4">
+                  <h2 class="text-2xl font-bold">{{ trip.t.name }}</h2>
+                  <p class="text-xl text-slate-700">{{ trip.t.start_date|date:'Y-m-d' }}~{{ trip.t.end_date|date:'Y-m-d' }}</p>
+                </div>
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      <br />
+    {% else %}
+      <p class="mt-48 mb-24 text-3xl font-bold text-center">目前還没有行程喔</p>
+    {% endif %}
+
+    <div class="flex items-center justify-center px-4 mt-8 mb-10 md:px-0">
+      <a class="flex items-center justify-center w-full p-2 text-lg font-bold text-center text-white border md:w-1/3 md:text-2xl h-14 bg-blue-btn hover:bg-blue-dc rounded-3xl" href="{% url 'trips:new' %}">建立新行程</a>
+    </div>
+    
+
+  </div>
+
+{% endblock %}
+{% block script %}
+<script src="{% static 'scripts/route.js' %}"></script>
+{% endblock %}
