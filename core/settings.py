@@ -62,11 +62,8 @@ INSTALLED_APPS = [
     "blogs",
     "corsheaders",
     "whitenoise.runserver_nostatic",
-    'ckeditor_uploader',
     "django_ckeditor_5",
 ]
-CKEDITOR_UPLOAD_PATH = "uploads/"
-CKEDITOR_RESTRICT_BY_USER = True
 
 CKEDITOR_5_CONFIGS = {
     'blog': {
