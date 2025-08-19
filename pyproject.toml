@@ -2,18 +2,18 @@
 name = "tripway"
 version = "0.1.0"
 description = ""
-authors = ["TripWay Dev <mingyi1223@gmail.com>"]
+authors = ["TripWay Dev <seanchen1073@gmail.com>"]
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.12"
 django = "^5.0.4"
 psycopg = "^3.1.18"
-# 移除 psycopg2 - Django 5.0+ 只使用 psycopg (版本 3)
 django-allauth = {extras = ["socialaccount"], version = "^0.62.1"}
 python-dotenv = "^1.0.1"
 cryptography = "^42.0.7"
-cffi = "^1.17.0"  # 新增明確的 cffi 版本
+cffi = "^1.17.0"
 pillow = "^10.3.0"
 requests = "^2.32.2"
 django-storages = "^1.14.3"
