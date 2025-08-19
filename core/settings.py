@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-import django_heroku
 import dj_database_url
 
 load_dotenv()
@@ -16,29 +15,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-&u@2d$fi47oaawy#os8ak*nn7zx_g7e$!ci*w=&i(8#j^xs@%^"
 
-IS_HEROKU_APP = os.getenv("HEROKU_APP")
+DEBUG = os.getenv("DEBUG", "1") == "1"
 
-# SECURITY WARNING: don't run with debug turned on in production!
-if IS_HEROKU_APP:
-    DEBUG = False
-else:
-    DEBUG = True
-
-# Prefer Zeabur's TRIPWAY_HOST (or any runtime provided host) if HOST_NAME is not set
 HOST_NAME = os.getenv("HOST_NAME") or os.getenv("TRIPWAY_HOST")
-CSRF_TRUSTED_ORIGINS = (
-    [f"https://{HOST_NAME}", "http://tripway.cc"] if HOST_NAME else ["http://tripway.cc"]
-)
+CSRF_TRUSTED_ORIGINS = [f"https://{HOST_NAME}", "http://tripway.cc"] if HOST_NAME else ["http://tripway.cc"]
 
-if IS_HEROKU_APP:
-    ALLOWED_HOSTS = [HOST_NAME] if HOST_NAME else ["*"]
-else:
-    ALLOWED_HOSTS = [
-        "localhost",
-        "127.0.0.1",
-        HOST_NAME,
-        "*",
-    ]
+ALLOWED_HOSTS = [h for h in ["localhost", "127.0.0.1", HOST_NAME, "*"] if h]
 
 SITE_ID = 5
 
@@ -74,7 +56,7 @@ CKEDITOR_5_CONFIGS = {
     'blog': {
         'toolbar': [
             'heading', '|', 'fontSize', 'fontColor', 'fontBackgroundColor', '|',
-            'bold', 'italic', 'underline', 'link', 'bulletedList',
+            'bold', 'italic', 'underline', 'link', 'bulletedList', 
             'numberedList', 'blockQuote', '|',
             'alignment', 'indent', 'outdent', '|', 'undo', 'redo'
         ],
@@ -141,7 +123,6 @@ WSGI_APPLICATION = "core.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-# Prefer Zeabur/Cloud style single connection string first
 DATABASE_URL = (
     os.getenv("POSTGRES_CONNECTION_STRING")
     or os.getenv("POSTGRES_URI")
@@ -152,7 +133,6 @@ if DATABASE_URL:
         "default": dj_database_url.parse(DATABASE_URL, conn_max_age=600)
     }
 elif os.getenv("DB_NAME"):
-    # Support classic DB_* envs if provided
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -164,7 +144,6 @@ elif os.getenv("DB_NAME"):
         }
     }
 else:
-    # Local development fallback
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -212,11 +191,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = "/static/"
-if IS_HEROKU_APP:
-    STATIC_ROOT = os.path.join(BASE_DIR, "static")
-else:
-    STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-    STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
@@ -250,6 +226,3 @@ DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-
-# Do not let django_heroku override DATABASES we already configured.
-django_heroku.settings(config=locals(), databases=False, staticfiles=False, logging=False)
