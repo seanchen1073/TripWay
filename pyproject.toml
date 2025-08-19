@@ -9,10 +9,11 @@ readme = "README.md"
 python = "^3.12"
 django = "^5.0.4"
 psycopg = "^3.1.18"
-psycopg2 = "^2.9.9"
+# 移除 psycopg2 - Django 5.0+ 只使用 psycopg (版本 3)
 django-allauth = {extras = ["socialaccount"], version = "^0.62.1"}
 python-dotenv = "^1.0.1"
 cryptography = "^42.0.7"
+cffi = "^1.17.0"  # 新增明確的 cffi 版本
 pillow = "^10.3.0"
 requests = "^2.32.2"
 django-storages = "^1.14.3"
@@ -25,7 +26,6 @@ whitenoise = "^6.6.0"
 django-heroku = "^0.3.1"
 django-cors-headers = "^4.3.1"
 django-ckeditor = "^6.7.1"
-
 
 [build-system]
 requires = ["poetry-core"]
